@@ -1,15 +1,28 @@
 const spicedPg = require("spiced-pg");
-const db = spicedPg("postgres:postgres:postgres@localhost:5432/geography");
+const db = spicedPg("postgres:postgres:postgres@localhost:5432/petition");
 
-module.exports.getActors = () => {
-    return db.query(`SELECT * FROM actors`);
+module.exports.getSignatures = () => {
+    return db.query(`SELECT * FROM signatures`);
 };
 
-module.exports.addActor = (name, age, numberOfOscars) => {
+module.exports.addSignature = (first, last, signature) => {
     return db.query(
         `
-    INSERT INTO actors (name, age, numberOfOscars)
+    INSERT INTO actors (first, last, signature)
     VALUES ($1, $2, $3)`,
-        [name, age, numberOfOscars]
+        [first, last, signature]
     );
 };
+
+// module.exports.getActors = () => {
+//     return db.query(`SELECT * FROM actors`);
+// };
+
+// module.exports.addActor = (name, age, numberOfOscars) => {
+//     return db.query(
+//         `
+//     INSERT INTO actors (name, age, numberOfOscars)
+//     VALUES ($1, $2, $3)`,
+//         [name, age, numberOfOscars]
+//     );
+// };
