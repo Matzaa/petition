@@ -2,30 +2,29 @@
     console.log("script.js hooked up");
 
     var c = $("canvas");
-    var ctx = $("canvas")[0].getContext("2d");
-
+    var ctx = c[0].getContext("2d");
+    var todata = c[0].toDataURL("text");
     var pressed = false;
     var lastX;
     var lastY;
 
-    c.mousedown(function (e) {
+    c.on("mousedown", (e) => {
         pressed = true;
         sign(e.pageX - c.offset().left, e.pageY - c.offset().top, false);
     });
 
-    c.mousemove(function (e) {
+    c.on("mousemove", (e) => {
         if (pressed) {
             sign(e.pageX - c.offset().left, e.pageY - c.offset().top, true);
         }
     });
 
-    c.mouseup(function () {
+    c.on("mouseup", function () {
         pressed = false;
     });
 
     function sign(x, y, isDown) {
         if (isDown) {
-            console.log("isDown", isDown);
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
@@ -35,4 +34,12 @@
         lastX = x;
         lastY = y;
     }
+
+    console.log("c[0].toDataURL();", c[0].toDataURL("text"));
+
+    $("button").on("click", () => {
+        $("#signatureInput").val(todata);
+        console.log('$("#signatureInput").val', $("#signatureInput").val());
+    });
+    console.log("todata", todata);
 })();
