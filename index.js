@@ -84,10 +84,13 @@ db.getNames()
     .then((results) => {
         console.log("getNames results", results.rows[3]);
         var rows = results.rows;
-        var indexNum = results.rows.length;
+        var indexNum = results.rows.length - 1;
         console.log("indexNum", indexNum);
-        // lastPerson.push(results.rows[indexNum]);
-        console.log("results.rows[indexNum]", results.rows[indexNum]);
+        lastPerson.push(results.rows[indexNum].first);
+        console.log(
+            "results.rows[indexNum].first",
+            results.rows[indexNum].first
+        );
         for (var i = 0; i < rows.length; i++) {
             var fullName = { first: rows[i].first, last: rows[i].last };
             signersNames.push(fullName);
