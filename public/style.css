@@ -1,6 +1,7 @@
-* {
-    background-color: aquamarine;
-}
+/* * {
+    background-image: url(./guitarist.jpg);
+    object-fit: fill;
+} */
 
 canvas {
     border: 3px red dotted;
@@ -8,4 +9,66 @@ canvas {
 
 h3 {
     color: tomato;
+    grid-row: 2;
+    grid-column: 2 / 3;
+}
+
+body {
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: 1fr 650px 1fr;
+    grid-template-rows: 170px auto 60px;
+}
+
+h1 {
+    font-size: 28px;
+    grid-row: 1;
+    grid-column: 1 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Rubik Mono One", sans-serif;
+    padding: 20px;
+    text-align: center;
+}
+
+#signersNames {
+    grid-row: 2;
+    grid-column: 2/ 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: "Rubik Mono One", sans-serif;
+}
+
+input,
+canvas,
+button {
+    margin: 20px;
+}
+
+form {
+    margin-top: 30px;
+    grid-row: 2;
+    grid-column: 2/ 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+img {
+    grid-row: 2/4;
+    grid-column: 1/ 4;
+    width: 100%;
+}
+
+h2 {
+    grid-row: 2;
+    grid-column: 2/ 3;
+    font-family: "Rubik Mono One", sans-serif;
+}
+
+a {
+    color: black;
 }

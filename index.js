@@ -46,59 +46,69 @@ app.get("/thanks", (req, res) => {
     if (!req.cookies.authenticated) {
         res.redirect("/petition");
     } else {
-        res.render("thankyou", {
-            layout: "main",
-            allSigners: signersNames,
-            lastOne: lastPerson,
-        });
+        db.getFirstName()
+            .then((results) => {
+                var indexNum = results.rows.length - 1;
+                console.log(
+                    "results.rows[indexNum].first,",
+                    results.rows[indexNum].first
+                );
+                var justSigned = results.rows[indexNum].first;
+                res.render("thankyou", {
+                    layout: "main",
+                    justSigned,
+                });
+            })
+            .catch((err) => {
+                console.log("err in getSig", err);
+            });
     }
 });
 
 app.get("/signers", (req, res) => {
     if (req.cookies.authenticated) {
-        // db.getNames()
-        //     .then((results) => {
-        // console.log("getNames results", results.rows[3]);
-        // var rows = results.rows;
-        // var signersNames = [];
-        // for (var i = 0; i < rows.length; i++) {
-        //     var fullName = rows[i].first + rows[i].last;
-        //     signersNames.push(fullName);
-        // }
-        res.render("signers", {
-            layout: "main",
-            allSigners: signersNames,
-        });
-        // })
-        // .catch((err) => {
-        //     console.log("err in getSig", err);
-        // });
+        db.getNames()
+            .then((results) => {
+                var rows = results.rows;
+                var signersNames = [];
+                for (var i = 0; i < rows.length; i++) {
+                    var fullName = { first: rows[i].first, last: rows[i].last };
+                    signersNames.push(fullName);
+                }
+                res.render("signers", {
+                    layout: "main",
+                    allSigners: signersNames,
+                });
+            })
+            .catch((err) => {
+                console.log("err in getSig", err);
+            });
     } else {
         res.redirect("/petition");
     }
 });
 
-var signersNames = [];
-var lastPerson = [];
-db.getNames()
-    .then((results) => {
-        console.log("getNames results", results.rows[3]);
-        var rows = results.rows;
-        var indexNum = results.rows.length - 1;
-        console.log("indexNum", indexNum);
-        lastPerson.push(results.rows[indexNum].first);
-        console.log(
-            "results.rows[indexNum].first",
-            results.rows[indexNum].first
-        );
-        for (var i = 0; i < rows.length; i++) {
-            var fullName = { first: rows[i].first, last: rows[i].last };
-            signersNames.push(fullName);
-        }
-    })
-    .catch((err) => {
-        console.log("err in getSig", err);
-    });
+// var signersNames = [];
+// var lastPerson = [];
+// db.getNames()
+//     .then((results) => {
+//         console.log("getNames results", results.rows[3]);
+//         var rows = results.rows;
+//         var indexNum = results.rows.length - 1;
+//         console.log("indexNum", indexNum);
+//         lastPerson.push(results.rows[indexNum].first);
+//         console.log(
+//             "results.rows[indexNum].first",
+//             results.rows[indexNum].first
+//         );
+//         for (var i = 0; i < rows.length; i++) {
+//             var fullName = { first: rows[i].first, last: rows[i].last };
+//             signersNames.push(fullName);
+//         }
+//     })
+//     .catch((err) => {
+//         console.log("err in getSig", err);
+//     });
 
 //-----------------PRACTICE-------------------
 // app.use(express.static("./public"));

@@ -18,6 +18,10 @@ module.exports.getNames = () => {
     return db.query(`SELECT first, last FROM signatures`);
 };
 
+module.exports.getFirstName = () => {
+    return db.query(`SELECT first FROM signatures`);
+};
+
 // module.exports.getActors = () => {
 //     return db.query(`SELECT * FROM actors`);
 // };
