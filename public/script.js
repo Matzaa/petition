@@ -3,7 +3,7 @@
 
     var c = $("canvas");
     var ctx = c[0].getContext("2d");
-    var todata = c[0].toDataURL("text");
+    var dataURL;
     var pressed = false;
     var lastX;
     var lastY;
@@ -21,6 +21,8 @@
 
     c.on("mouseup", function () {
         pressed = false;
+        dataURL = c[0].toDataURL("text");
+        $("#signatureInput").val(dataURL);
     });
 
     function sign(x, y, isDown) {
@@ -31,15 +33,8 @@
             ctx.closePath();
             ctx.stroke();
         }
+
         lastX = x;
         lastY = y;
     }
-
-    console.log("c[0].toDataURL();", c[0].toDataURL("text"));
-
-    $("button").on("click", () => {
-        $("#signatureInput").val(todata);
-        console.log('$("#signatureInput").val', $("#signatureInput").val());
-    });
-    console.log("todata", todata);
 })();

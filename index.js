@@ -2,61 +2,90 @@ const express = require("express");
 const app = express();
 const db = require("./db");
 const hb = require("express-handlebars");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
+const csurf = require("csurf");
 
+//-------------------templating engine--------------------
 app.engine("handlebars", hb());
 app.set("view engine", "handlebars");
-app.use(cookieParser());
+
+//-------------------middleware---------------------------
+
+app.use(express.static("./public"));
+
 app.use(
     express.urlencoded({
         extended: false,
     })
 );
+app.use(
+    cookieSession({
+        secret: `I'm always angry.`,
+        maxAge: 1000 * 60 * 60 * 24 * 14,
+    })
+);
 
-app.use(express.static("./public"));
+app.use(csurf());
 
+app.use((req, res, next) => {
+    res.set("X-frame-Options", "deny");
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
+
+//--------------------routes-------------------------------
 app.get("/", (req, res) => {
+    console.log("session cookie", req.session);
+    req.session.msg = "bigbigsecret";
+    req.session.permission = true;
+    console.log("session cookie after val is set", req.session);
     res.redirect("./petition");
 });
 
 app.get("/petition", (req, res) => {
-    res.render("petition", {
-        layout: "main",
-    });
+    const { msg, permission } = req.session;
+    if (msg === "bigbigsecret" && permission) {
+        res.render("petition", {
+            layout: "main",
+        });
+    } else {
+        res.send(`<h1> permission denied </h1>`);
+    }
 });
 
 app.post("/petition", (req, res) => {
     if (!req.body.first || !req.body.last || req.body.signature == "") {
         res.render("./petition", { somethingwrong: true });
     } else {
-        res.cookie("authenticated", true);
         db.addSignature(req.body.first, req.body.last, req.body.signature)
-            .then(() => {
+            .then((response) => {
                 console.log("it worked!");
+                req.session.cookieset = true;
+                req.session.idNum = response.rows[0].id;
+                console.log("with req.session.cookieset", req.session);
+                res.redirect("./thanks"); //first finish addsignature then render thanks
             })
             .catch((err) => {
                 console.log("err in addSig", err);
             });
-        res.redirect("./thanks");
     }
     console.log("names", req.body.first, req.body.last);
 });
 
 app.get("/thanks", (req, res) => {
-    if (!req.cookies.authenticated) {
+    const { cookieset, idNum } = req.session;
+    console.log("req.session in thanks", req.session);
+    if (!idNum && !cookieset) {
         res.redirect("/petition");
     } else {
-        db.getFirstName()
+        db.getData(`SELECT first, signature FROM signatures`)
             .then((results) => {
                 var indexNum = results.rows.length - 1;
-                console.log(
-                    "results.rows[indexNum].first,",
-                    results.rows[indexNum].first
-                );
-                var justSigned = results.rows[indexNum].first;
+                var justSignedName = results.rows[indexNum].first;
+                var justSignedSignature = results.rows[indexNum].signature;
                 res.render("thankyou", {
-                    layout: "main",
-                    justSigned,
+                    justSignedName,
+                    justSignedSignature,
                 });
             })
             .catch((err) => {
@@ -66,8 +95,9 @@ app.get("/thanks", (req, res) => {
 });
 
 app.get("/signers", (req, res) => {
-    if (req.cookies.authenticated) {
-        db.getNames()
+    const { idNum, cookieset } = req.session;
+    if (idNum && cookieset) {
+        db.getData(`SELECT first, last FROM signatures`)
             .then((results) => {
                 var rows = results.rows;
                 var signersNames = [];
@@ -87,28 +117,6 @@ app.get("/signers", (req, res) => {
         res.redirect("/petition");
     }
 });
-
-// var signersNames = [];
-// var lastPerson = [];
-// db.getNames()
-//     .then((results) => {
-//         console.log("getNames results", results.rows[3]);
-//         var rows = results.rows;
-//         var indexNum = results.rows.length - 1;
-//         console.log("indexNum", indexNum);
-//         lastPerson.push(results.rows[indexNum].first);
-//         console.log(
-//             "results.rows[indexNum].first",
-//             results.rows[indexNum].first
-//         );
-//         for (var i = 0; i < rows.length; i++) {
-//             var fullName = { first: rows[i].first, last: rows[i].last };
-//             signersNames.push(fullName);
-//         }
-//     })
-//     .catch((err) => {
-//         console.log("err in getSig", err);
-//     });
 
 //-----------------PRACTICE-------------------
 // app.use(express.static("./public"));

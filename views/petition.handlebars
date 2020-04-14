@@ -1,12 +1,14 @@
 
 <h1>Please sign this petition to stop neighbors taking on learning to play the guitar under quarantine!</h1>
 <form method="POST">
+    <h2>Tired of waking up at 3 am to the same four chords of wonderwall played over and over? Then sign the petition!</h2>
 {{#if somethingwrong}}
 <h3>Please complete all fields before submitting</h3>
 {{/if}}
     <input type="text" name="first" placeholder="first" autocomplete="off">
     <input type="text" name="last" placeholder="last" autocomplete="off">
     <input type="hidden" name="signature" placeholder="signature" autocomplete="off" id="signatureInput">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <canvas width="250" height="35"></canvas>
     <button type='submit'>Submit!</button>
 </form>

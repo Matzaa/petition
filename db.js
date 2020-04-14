@@ -9,9 +9,16 @@ module.exports.addSignature = (first, last, signature) => {
     return db.query(
         `
     INSERT INTO signatures (first, last, signature)
-    VALUES ($1, $2, $3)`,
+    VALUES ($1, $2, $3)
+    RETURNING ID;
+    
+    `,
         [first, last, signature]
     );
+};
+
+module.exports.getData = (dataQuery) => {
+    return db.query(dataQuery);
 };
 
 module.exports.getNames = () => {
