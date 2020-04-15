@@ -36,79 +36,42 @@ app.use((req, res, next) => {
 
 //--------------------routes-------------------------------
 app.get("/", (req, res) => {
-    res.redirect("./register");
-});
-
-app.get("/register", (req, res) => {
-    res.render("register");
+    console.log("session cookie", req.session);
+    req.session.msg = "bigbigsecret";
+    req.session.permission = true;
+    console.log("session cookie after val is set", req.session);
+    res.redirect("./petition");
 });
 
 app.post("/register", (req, res) => {
-    if (
-        !req.body.first ||
-        !req.body.last ||
-        !req.body.email ||
-        !req.body.password
-    ) {
-        res.render("register", { somethingwrong: true });
-    } else {
-        hash(req.body.password)
-            .then((hashedPw) => {
-                console.log("HashedPw in register", hashedPw);
-            })
-            .then(
-                db.addUser(
-                    req.body.first,
-                    req.body.last,
-                    req.body.email,
-                    req.body.password
-                )
-            )
-            .then((response) => {
-                console.log("it worked!");
-                req.session.userId = response.rows[0].id;
-                console.log("with req.session.cookieset", req.session);
-                res.redirect("/petition"); //redirect to petition instead of 200
-            })
-
-            .catch((err) => {
-                console.log("error in POST register hash", err);
-                res.render("register", { somethingwrong: true });
-            });
-    }
+    //grab userinput
+    hash("userpassword")
+        .then((hashedPw) => {
+            console.log("HashedPw in register", hashedPw);
+        })
+        .catch((err) => console.log("error in POST register hash", err));
+    res.sendStatus(200); //redirect to petition instead of 200
 });
-
-app.get("/login", (req, res) => {
-    res.render("/login");
-});
-
 app.post("/login", (req, res) => {
-    const { userId } = req.session;
-    if (!req.body.email || !req.body.password) {
-        res.render("/login", { somethingwrong: true });
-    } else {
-        db.getData(`SELECT * FROM users WHERE email = ${req.body.email}`)
-            .then((results) => {
-                let user = results.rows[0];
-                const hashedPw = results.rows[0].password;
-                compare(req.body.password, hashedPw);
-            })
-            .then((matchValue) => {
-                if (matchValue) {
-                    req.session.userId = userId;
-                    res.redirect("/thanks");
-                } else {
-                    res.render("/login", { somethingwrong: true });
-                }
-            })
-            .catch((err) => console.log("error in POST login compare", err));
-    }
+    //use compare
+    //take the password and compare it to what we stroed as a hash
+    let hashedPw = "test"; //grab the user's stored hash from the db and use that as compare value
+    compare("userPasswored", hashedPw)
+        .then((matchValue) => {
+            console.log("match value of compare");
+        })
+        .catch((err) => console.log("err in post login compare", err));
 });
 
 app.get("/petition", (req, res) => {
-    res.render("petition", {
-        layout: "main",
-    });
+    const { msg, permission } = req.session;
+    if (msg === "bigbigsecret" && permission) {
+        res.render("petition", {
+            layout: "main",
+        });
+    } else {
+        res.send(`<h1> permission denied </h1>`);
+    }
 });
 
 app.post("/petition", (req, res) => {
@@ -119,7 +82,7 @@ app.post("/petition", (req, res) => {
             .then((response) => {
                 console.log("it worked!");
                 req.session.cookieset = true;
-                req.session.userId = response.rows[0].id;
+                req.session.idNum = response.rows[0].id;
                 console.log("with req.session.cookieset", req.session);
                 res.redirect("./thanks"); //first finish addsignature then render thanks
             })
@@ -131,9 +94,9 @@ app.post("/petition", (req, res) => {
 });
 
 app.get("/thanks", (req, res) => {
-    const { cookieset, userId } = req.session;
+    const { cookieset, idNum } = req.session;
     console.log("req.session in thanks", req.session);
-    if (!userId && !cookieset) {
+    if (!idNum && !cookieset) {
         res.redirect("/petition");
     } else {
         db.getData(`SELECT first, signature FROM signatures`)
@@ -153,8 +116,8 @@ app.get("/thanks", (req, res) => {
 });
 
 app.get("/signers", (req, res) => {
-    const { userId, cookieset } = req.session;
-    if (userId && cookieset) {
+    const { idNum, cookieset } = req.session;
+    if (idNum && cookieset) {
         db.getData(`SELECT first, last FROM signatures`)
             .then((results) => {
                 var rows = results.rows;
