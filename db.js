@@ -1,15 +1,15 @@
 const spicedPg = require("spiced-pg");
 const db = spicedPg("postgres:postgres:postgres@localhost:5432/petition");
 
-module.exports.addSignature = (first, last, signature) => {
+module.exports.addSignature = (signature, user_id) => {
     return db.query(
         `
-    INSERT INTO signatures (first, last, signature)
-    VALUES ($1, $2, $3)
+    INSERT INTO signatures (signature, id)
+    VALUES ($1, $2)
     RETURNING ID;
     
     `,
-        [first, last, signature]
+        [signature, user_id]
     );
 };
 

@@ -5,8 +5,8 @@
 {{#if somethingwrong}}
 <h3>Please complete all fields before submitting</h3>
 {{/if}}
-    <input type="text" name="first" placeholder="first" autocomplete="off">
-    <input type="text" name="last" placeholder="last" autocomplete="off">
+    <input type="text" name="first" placeholder="first" autocomplete='off' value={{firstName}}>
+    <input type="text" name="last" placeholder="last" autocomplete='off' value={{lastName}}>
     <input type="hidden" name="signature" placeholder="signature" autocomplete="off" id="signatureInput">
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <canvas width="250" height="35"></canvas>

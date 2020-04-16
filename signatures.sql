@@ -1,11 +1,7 @@
-DROP TABLE IF EXISTS signatures, users;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS signatures;
+DROP TABLE IF EXISTS user_profiles CASCADE;
 
-CREATE TABLE signatures (
-    id SERIAL PRIMARY KEY,
-    signature VARCHAR NOT NULL CHECK (signature != ''),
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE users(
       id SERIAL PRIMARY KEY,
@@ -15,3 +11,19 @@ CREATE TABLE users(
       password VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
  );
+ 
+CREATE TABLE signatures(
+    id SERIAL PRIMARY KEY,
+    signature VARCHAR NOT NULL CHECK (signature != ''),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+  CREATE TABLE user_profiles(
+  id SERIAL PRIMARY KEY,
+  age INT,
+  city VARCHAR(100),
+  url VARCHAR(300),
+  user_id INT REFERENCES users(id) NOT NULL UNIQUE --unique means they can only have 1 row;
+  );
