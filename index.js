@@ -106,7 +106,6 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-    const { user } = req.session;
     let id;
     console.log("req.body.password", req.body.password);
     if (!req.body.email || !req.body.password) {
@@ -115,7 +114,7 @@ app.post("/login", (req, res) => {
     } else {
         db.getData(
             `SELECT * FROM users WHERE users.email = '${req.body.email}'`
-        ) ////// NEEDS TO BE FIXED
+        )
             .then((results) => {
                 const hashedPw = results.rows[0].password;
                 id = results.rows[0].id;
@@ -131,18 +130,28 @@ app.post("/login", (req, res) => {
 
                             console.log(
                                 "POST login current id & req.session & userId",
-                                id,
-                                req.session,
-                                user
+
+                                req.session
                             );
                             db.getData(
-                                `SELECT * FROM signatures WHERE user_id = ${req.session.userId}`
+                                `SELECT * FROM signatures WHERE user_id = '${req.session.user.userId}'`
                             ).then((results) => {
+                                console.log(
+                                    "signatures where Id matches",
+                                    results
+                                );
                                 if (results !== "") {
-                                    req.session.sigId = results.signature;
+                                    req.session.user.signature =
+                                        results.rows[0].signature;
+
                                     console.log(
-                                        "results.signature",
-                                        results.signature
+                                        "results.rows[0].signature",
+                                        results.rows[0].signature
+                                    );
+
+                                    console.log(
+                                        "req.session before redirecting to thanks",
+                                        req.session
                                     );
                                     res.redirect("/thanks");
                                 } else {
@@ -228,7 +237,7 @@ app.post("/petition", (req, res) => {
         db.addSignature(req.body.signature, user.userId)
             .then(() => {
                 console.log("POST petition: signature added!");
-                req.session.user = { signature: req.body.signature };
+                req.session.user.signature = req.body.signature;
                 console.log("with req.session.signed", req.session);
                 res.redirect("./thanks"); //first finish addsignature then render thanks
             })
@@ -265,7 +274,7 @@ app.get("/thanks", (req, res) => {
         //     .catch((err) => {
         //         console.log("err in getSig", err);
         //     });
-        let justSignedName = user.first;
+        let justSignedName = user.firstName;
         let justSignedSignature = user.signature;
         res.render("thankyou", {
             justSignedName,
@@ -332,6 +341,15 @@ app.get("/signers", (req, res) => {
     } else {
         res.redirect("/petition");
     }
+});
+
+//===========================
+//====    logout    ==========
+//===========================
+
+app.get("/logout", (req, res) => {
+    req.session = null;
+    res.redirect("/login");
 });
 
 app.listen(process.env.PORT || 8080, () =>
