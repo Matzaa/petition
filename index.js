@@ -113,7 +113,9 @@ app.post("/login", (req, res) => {
         res.render("login", { somethingwrong: true });
         return;
     } else {
-        db.getData(`SELECT * FROM users WHERE users.email = ${req.body.email}`) ////// NEEDS TO BE FIXED
+        db.getData(
+            `SELECT * FROM users WHERE users.email = '${req.body.email}'`
+        ) ////// NEEDS TO BE FIXED
             .then((results) => {
                 const hashedPw = results.rows[0].password;
                 id = results.rows[0].id;
@@ -332,33 +334,6 @@ app.get("/signers", (req, res) => {
     }
 });
 
-//-----------------PRACTICE-------------------
-// app.use(express.static("./public"));
-
-// app.get("/", (req, res) => {
-//     console.log("get request to/ route happend");
-// });
-
-// app.get("/page", (req, res) => {
-//     db.getActors()
-//         .then((results) => {
-//             console.log("results", results);
-//         })
-//         .catch((err) => {
-//             console.log("err in getciti", err);
-//         });
-// });
-
-// app.post("/add-actor", (req, res) => {
-//     db.addActor("Julia Roberts", 25, 3)
-//         .then(() => {
-//             console.log("it worked!");
-//         })
-//         .catch((err) => {
-//             console.log("err in addActor", err);
-//         });
-// });
-
-app.listen(8080, () => console.log("petition server listening"));
-
-//should we reset the id (serial)
+app.listen(process.env.PORT || 8080, () =>
+    console.log("petition server listening")
+);
