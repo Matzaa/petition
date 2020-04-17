@@ -4,12 +4,21 @@ const db = spicedPg("postgres:postgres:postgres@localhost:5432/petition");
 module.exports.addSignature = (signature, user_id) => {
     return db.query(
         `
-    INSERT INTO signatures (signature, id)
+    INSERT INTO signatures (signature, user_id)
     VALUES ($1, $2)
     RETURNING ID;
     
     `,
         [signature, user_id]
+    );
+};
+
+module.exports.addProfileInfo = (age, city, url, user_id) => {
+    return db.query(
+        `INSERT INTO user_profiles (age, city, url, user_id)
+    VALUES ($1, $2, $3, $4);
+    `,
+        [age, city, url, user_id]
     );
 };
 
