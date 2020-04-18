@@ -1,0 +1,15 @@
+<h1>Edit your profile</h1>
+<form method="POST">
+{{#if somethingwrong}}
+<h3>Please provide a valid URL for your website</h3>
+{{/if}}
+    <input type="text" name="first" placeholder="first" autocomplete="off" value="{{first}}">
+    <input type="text" name="last" placeholder="last" autocomplete="off" value="{{last}}">
+    <input type="text" name="email" placeholder="email" autocomplete="off" value="{{email}}">
+    <input type="text" name="password" placeholder="password" autocomplete="off">
+    <input type="text" name="age" placeholder="age" autocomplete="off" value="{{age}}">
+    <input type="text" name="city" placeholder="city" autocomplete="off" value="{{city}}">
+    <input type="text" name="url" placeholder="website" autocomplete="off" value="{{url}}">
+    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <button type='submit'>Continue</button>
+</form>

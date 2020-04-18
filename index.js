@@ -39,23 +39,19 @@ app.get("/", (req, res) => {
     res.redirect("./register");
 });
 
-//=============================
-//====    register   ==========
-//=============================
+//=======================================================================================
+//==============================    register   ==========================================
+//=======================================================================================
 app.get("/register", (req, res) => {
     console.log("req.session", req.session);
-    if (req.session.userId) {
-        res.redirect("/login");
+    if (req.session.user) {
+        res.redirect("/profile");
     } else {
         res.render("register");
     }
 });
 
 app.post("/register", (req, res) => {
-    // let first = req.body.first;
-    // let last = req.body.last;
-    // let email = req.body.email;
-    // let pw = req.body.password;
     if (
         !req.body.first ||
         !req.body.last ||
@@ -77,17 +73,17 @@ app.post("/register", (req, res) => {
             .then((response) => {
                 console.log("registering worked!");
                 console.log("response in post reg", response);
-                // req.session.userId = response.rows[0].id;
                 req.session.user = {
                     firstName: req.body.first,
                     lastName: req.body.last,
+                    email: req.body.email,
                     userId: response.rows[0].id,
                 };
                 console.log(
                     "POST register - with req.session.user info",
                     req.session
                 );
-                res.redirect("/profile"); //redirect to petition instead of 200
+                res.redirect("/profile");
             })
 
             .catch((err) => {
@@ -97,9 +93,9 @@ app.post("/register", (req, res) => {
     }
 });
 
-//===========================
-//====    login    ==========
-//===========================
+//==========================================================================================
+//==================================    login    ===========================================
+//==========================================================================================
 
 app.get("/login", (req, res) => {
     res.render("login");
@@ -117,15 +113,14 @@ app.post("/login", (req, res) => {
         )
             .then((results) => {
                 const hashedPw = results.rows[0].password;
-                id = results.rows[0].id;
-
                 compare(req.body.password, hashedPw)
                     .then((matchValue) => {
                         if (matchValue) {
                             req.session.user = {
                                 firstName: results.rows[0].first,
                                 lastName: results.rows[0].last,
-                                userId: id,
+                                email: results.rows[0].email,
+                                userId: results.rows[0].id,
                             };
 
                             console.log(
@@ -140,7 +135,7 @@ app.post("/login", (req, res) => {
                                     "signatures where Id matches",
                                     results
                                 );
-                                if (results !== "") {
+                                if (results.rows[0] !== undefined) {
                                     req.session.user.signature =
                                         results.rows[0].signature;
 
@@ -172,9 +167,9 @@ app.post("/login", (req, res) => {
     }
 });
 
-//=============================
-//====     profile   ==========
-//=============================
+//==========================================================================================
+//=================================     profile   ==========================================
+//==========================================================================================
 
 app.get("/profile", (req, res) => {
     res.render("profile");
@@ -183,9 +178,22 @@ app.get("/profile", (req, res) => {
 app.post("/profile", (req, res) => {
     const { user } = req.session;
     const url = req.body.url;
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    if (
+        !url.startsWith("http://") &&
+        !url.startsWith("https://") &&
+        url !== ""
+    ) {
         res.render("profile", { somethingwrong: true });
     } else {
+        if (req.body.age == "") {
+            req.body.age = null;
+        }
+        if (req.body.city == "") {
+            req.body.city = null;
+        }
+        if (req.body.url == "") {
+            req.body.url = null;
+        }
         db.addProfileInfo(
             req.body.age,
             req.body.city,
@@ -202,9 +210,9 @@ app.post("/profile", (req, res) => {
     }
 });
 
-//=============================
-//====    petition   ==========
-//=============================
+//=========================================================================================
+//============================================    petition   ==============================
+//=========================================================================================
 
 app.get("/petition", (req, res) => {
     if (req.session.user) {
@@ -248,9 +256,70 @@ app.post("/petition", (req, res) => {
     console.log("names", req.body.first, req.body.last);
 });
 
-//==============================
-//====    thank you   ==========
-//==============================
+//================================================================================
+//=====================================   edit profile   =========================
+//================================================================================
+
+app.get("/profile/edit", (req, res) => {
+    const { user } = req.session;
+    db.getData(
+        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
+    )
+        .then((results) => {
+            res.render("profile_edit", results.rows[0]);
+        })
+        .catch((err) => {
+            console.log("err in edit profile query results", err);
+        });
+});
+
+app.post("/profile/edit", (req, res) => {
+    const { user } = req.session;
+    if (
+        !req.body.url.startsWith("http://") &&
+        !req.body.url.startsWith("https://") &&
+        req.body.url !== ""
+    ) {
+        if (req.body.password == "") {
+            Promise.all([db.updateUsersNoPw(), db.upsertProfile()])
+                .then(() => {
+                    //update cookies?
+                    db.getData(
+                        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
+                    )
+                        .then((results) => {
+                            res.render("profile_edit", results.rows[0]);
+                        })
+                        .catch((err) => {
+                            console.log(
+                                "err in edit profile query results",
+                                err
+                            );
+                        });
+                })
+                .catch((err) => {
+                    console.log("error in profile edit no Pw", err);
+                });
+        } else {
+            //hash PW
+            Promise.all([db.updateWithPw(), db.upsertProfile()]).then(() => {
+                db.getData(
+                    `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
+                )
+                    .then((results) => {
+                        res.render("profile_edit", results.rows[0]);
+                    })
+                    .catch((err) => {
+                        console.log("err in edit profile query results", err);
+                    });
+            });
+        }
+    }
+});
+
+//==========================================================================================
+//==================================    thank you   ========================================
+//==========================================================================================
 
 app.get("/thanks", (req, res) => {
     const { user } = req.session;
@@ -283,34 +352,9 @@ app.get("/thanks", (req, res) => {
     }
 });
 
-//===================================
-//=======   edit profile   ==========
-//===================================
-
-app.get("/profile/edit", (req, res) => {
-    res.render("profile_edit");
-});
-
-app.post("/profile", (req, res) => {
-    const { userId } = req.session;
-    const url = req.body.url;
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-        res.render("profile", { somethingwrong: true });
-    } else {
-        db.addProfileInfo(req.body.age, req.body.city, req.body.url, userId)
-            .then(() => {
-                console.log("profileInfo added!");
-                res.redirect("./petition");
-            })
-            .catch((err) => {
-                console.log("err in addProfileInfo", err);
-            });
-    }
-});
-
-//=============================
-//====    signers    ==========
-//=============================
+//=========================================================================================
+//==================================    signers    ========================================
+//=========================================================================================
 
 app.get("/signers", (req, res) => {
     const { user } = req.session;
@@ -319,7 +363,7 @@ app.get("/signers", (req, res) => {
             `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id`
         )
             .then((results) => {
-                console.log("GET signers: db relults", results.rows);
+                console.log("signers GET signers: db relults", results.rows);
                 var rows = results.rows;
                 var signersInfo = [];
                 for (var i = 0; i < rows.length; i++) {
@@ -343,9 +387,36 @@ app.get("/signers", (req, res) => {
     }
 });
 
-//===========================
-//====    logout    ==========
-//===========================
+//==================================================================================================
+//=====================================    signers by city  ========================================
+//==================================================================================================
+
+app.get("/signers/:byCity", (req, res) => {
+    const byCity = req.params.byCity;
+    console.log("req.params", req.params);
+    db.getData(
+        `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id WHERE LOWER(city)=LOWER('${byCity}')`
+    ).then((results) => {
+        console.log("results in signers by city", results.rows[0]);
+        var rows = results.rows;
+        var signersInfo = [];
+        for (var i = 0; i < rows.length; i++) {
+            var fullInfo = {
+                first: rows[i].first,
+                last: rows[i].last,
+                url: rows[i].url,
+            };
+            signersInfo.push(fullInfo);
+        }
+        res.render("signers_byCity", {
+            allSigners: signersInfo,
+        });
+    });
+});
+
+//======================================================================================================
+//==================================    logout    =======================================================
+//======================================================================================================
 
 app.get("/logout", (req, res) => {
     req.session = null;
