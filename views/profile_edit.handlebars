@@ -1,5 +1,5 @@
 <h1>Edit your profile</h1>
-<form method="POST">
+<form method="POST" class="mostForms">
 {{#if somethingwrong}}
 <h3>Please provide a valid URL for your website</h3>
 {{/if}}
@@ -11,5 +11,11 @@
     <input type="text" name="city" placeholder="city" autocomplete="off" value="{{city}}">
     <input type="text" name="url" placeholder="website" autocomplete="off" value="{{url}}">
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
-    <button type='submit'>Continue</button>
+    <button type='submit'>Submit</button>
+    {{#if submitted}}
+    <h4 style="color:tomato;">changes submitted!</h4>
+    {{/if}}
 </form>
+</div id='navbar'>
+{{>navbar}}
+</div>

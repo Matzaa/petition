@@ -1,15 +1,14 @@
 <h1>Please register to sign the petition</h1>
-<form method="POST">
-    <h2>About: Tired of waking up at 3 am to the same four chords of wonderwall played over and over? Then sign the petition to stop neighbors taking on learning to play the guitar under quarantine!!</h2>
+<form method="POST" class="mostForms">
+    <h2>Tired of waking up at 3 am to the same four chords of wonderwall played over and over? Then sign the petition to stop neighbors taking on learning to play the guitar under quarantine!!</h2>
 {{#if somethingwrong}}
 <h3>Please complete all fields before submitting</h3>
 {{/if}}
-<h4>If you're already registered please <a href="/login">login</a></h4>
+<h4>If you're already registered please <a style="color:tomato;"href="/login">login</a></h4>
     <input type="text" name="first" placeholder="first" autocomplete="off">
     <input type="text" name="last" placeholder="last" autocomplete="off">
     <input type="text" name="email" placeholder="email" autocomplete="off">
     <input type="text" name="password" placeholder="password" autocomplete="off">
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type='submit'>Register</button>
-    <h3><a href="/logout"></a></h3>
 </form>

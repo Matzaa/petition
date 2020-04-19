@@ -1,5 +1,5 @@
 <h1>Please tell us some more about yourself±</h1>
-<form method="POST">
+<form method="POST" class="mostForms">
     <h2>How old are you? Where do you come from? Do you have a website?</h2>
 {{#if somethingwrong}}
 <h3>Please provide a valid URL for your website</h3>
@@ -10,3 +10,6 @@
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type='submit'>Continue</button>
 </form>
+</div id='navbar'>
+{{>navbar}}
+</div>

@@ -1,5 +1,5 @@
 <h1>Login</h1>
-<form method="POST">
+<form method="POST" class="mostForms">
 {{#if somethingwrong}}
 <h3>Oooops! Something went wrong, please try again!</h3>
 {{/if}}
@@ -7,7 +7,5 @@
     <input type="text" name="password" placeholder="password" autocomplete="off">
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     <button type='submit'>Login</button>
-    <h3>Haven't registered yet? Go <a href="/register">here</a> !</h3>
-    <h3><a href="/logout">logout</a>
-    </h3>
+    <h4 >Haven't registered yet? Go <a href="/register" style="color:tomato;">here</a> !</h4>
 </form>

@@ -211,7 +211,7 @@ app.post("/profile", (req, res) => {
 });
 
 //=========================================================================================
-//============================================    petition   ==============================
+//===================================    petition   =======================================
 //=========================================================================================
 
 app.get("/petition", (req, res) => {
@@ -223,9 +223,11 @@ app.get("/petition", (req, res) => {
         //         let lastName = results.rows[0].last;
         let firstName = user.firstName;
         let lastName = user.lastName;
+        let signature = user.signature;
         res.render("./petition", {
             firstName,
             lastName,
+            signature,
         });
         //     })
         //     .catch((err) => {
@@ -275,20 +277,59 @@ app.get("/profile/edit", (req, res) => {
 
 app.post("/profile/edit", (req, res) => {
     const { user } = req.session;
+    if (req.body.age == "") {
+        req.body.age = null;
+    }
+    if (req.body.city == "") {
+        req.body.city = null;
+    }
+
     if (
         !req.body.url.startsWith("http://") &&
         !req.body.url.startsWith("https://") &&
         req.body.url !== ""
     ) {
+        res.render("profile_edit", { somethingwrong: true });
+    } else {
+        if (req.body.url == "") {
+            req.body.url = null;
+        }
         if (req.body.password == "") {
-            Promise.all([db.updateUsersNoPw(), db.upsertProfile()])
+            Promise.all([
+                db.updateUsersNoPw(
+                    req.body.first,
+                    req.body.last,
+                    req.body.email,
+                    user.userId
+                ),
+                db.upsertProfile(
+                    req.body.age,
+                    req.body.city,
+                    req.body.url,
+                    user.userId
+                ),
+            ])
                 .then(() => {
-                    //update cookies?
                     db.getData(
                         `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
                     )
                         .then((results) => {
-                            res.render("profile_edit", results.rows[0]);
+                            user.firstName = req.body.first;
+                            user.lastName = req.body.last;
+                            user.email = req.body.email;
+                            console.log(
+                                "updated prfile, this is the cookie",
+                                user
+                            );
+                            res.render("profile_edit", {
+                                first: results.rows[0].first,
+                                last: results.rows[0].last,
+                                email: results.rows[0].email,
+                                age: results.rows[0].age,
+                                city: results.rows[0].city,
+                                url: results.rows[0].url,
+                                submitted: true,
+                            });
                         })
                         .catch((err) => {
                             console.log(
@@ -301,18 +342,62 @@ app.post("/profile/edit", (req, res) => {
                     console.log("error in profile edit no Pw", err);
                 });
         } else {
-            //hash PW
-            Promise.all([db.updateWithPw(), db.upsertProfile()]).then(() => {
-                db.getData(
-                    `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-                )
-                    .then((results) => {
-                        res.render("profile_edit", results.rows[0]);
-                    })
-                    .catch((err) => {
-                        console.log("err in edit profile query results", err);
-                    });
-            });
+            hash(req.body.password)
+                .then((hashedPw) => {
+                    Promise.all([
+                        db.updateUsersWithPw(
+                            req.body.first,
+                            req.body.last,
+                            req.body.email,
+                            hashedPw,
+                            user.userId
+                        ),
+                        db.upsertProfile(
+                            req.body.age,
+                            req.body.city,
+                            req.body.url,
+                            user.userId
+                        ),
+                    ])
+                        .then(() => {
+                            db.getData(
+                                `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
+                            )
+                                .then((results) => {
+                                    user.firstName = req.body.first;
+                                    user.lastName = req.body.last;
+                                    user.email = req.body.email;
+                                    console.log(
+                                        "updated prfile, this is the cookie",
+                                        user
+                                    );
+                                    res.render("profile_edit", {
+                                        first: results.rows[0].first,
+                                        last: results.rows[0].last,
+                                        email: results.rows[0].email,
+                                        age: results.rows[0].age,
+                                        city: results.rows[0].city,
+                                        url: results.rows[0].url,
+                                        submitted: true,
+                                    });
+                                })
+                                .catch((err) => {
+                                    console.log(
+                                        "err in edit profile query results",
+                                        err
+                                    );
+                                });
+                        })
+                        .catch((err) => {
+                            console.log(
+                                "error in editprofile getdata with hashedPw",
+                                err
+                            );
+                        });
+                })
+                .catch((err) => {
+                    console.log("err in editprofile hashing Pw", err);
+                });
         }
     }
 });
@@ -327,22 +412,6 @@ app.get("/thanks", (req, res) => {
     if (!user.signature) {
         res.redirect("/petition");
     } else {
-        // db.getData(
-        //     `SELECT first, signature FROM users INNER JOIN signatures ON users.id = signatures.user_id`
-        // )
-        //     .then((results) => {
-        //         console.log("GET thanks: INNERjoin results", results);
-        //         var indexNum = results.rows.length - 1;
-        //         var justSignedName = results.rows[indexNum].first;
-        //         var justSignedSignature = results.rows[indexNum].signature;
-        //         res.render("thankyou", {
-        //             justSignedName,
-        //             justSignedSignature,
-        //         });
-        //     })
-        //     .catch((err) => {
-        //         console.log("err in getSig", err);
-        //     });
         let justSignedName = user.firstName;
         let justSignedSignature = user.signature;
         res.render("thankyou", {
@@ -385,6 +454,18 @@ app.get("/signers", (req, res) => {
     } else {
         res.redirect("/petition");
     }
+});
+
+app.post("/signers", (req, res) => {
+    const { user } = req.session;
+    db.deleteSig(user.userId)
+        .then(() => {
+            delete user.userId;
+            res.redirect("/petition");
+        })
+        .catch((err) => {
+            console.log("err in delete sig", err);
+        });
 });
 
 //==================================================================================================
