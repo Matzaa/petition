@@ -125,9 +125,7 @@ app.post("/login", (req, res) => {
         res.render("login", { somethingwrong: true });
         return;
     } else {
-        db.getData(
-            `SELECT * FROM users WHERE users.email = '${req.body.email}'`
-        )
+        db.getUsersByEmail(req.body.email)
             .then((results) => {
                 const hashedPw = results.rows[0].password;
                 compare(req.body.password, hashedPw)
@@ -145,31 +143,31 @@ app.post("/login", (req, res) => {
 
                                 req.session
                             );
-                            db.getData(
-                                `SELECT * FROM signatures WHERE user_id = '${req.session.user.userId}'`
-                            ).then((results) => {
-                                console.log(
-                                    "signatures where Id matches",
-                                    results
-                                );
-                                if (results.rows[0] !== undefined) {
-                                    req.session.user.signature =
-                                        results.rows[0].signature;
-
+                            db.checkSig(req.session.user.userId).then(
+                                (results) => {
                                     console.log(
-                                        "results.rows[0].signature",
-                                        results.rows[0].signature
+                                        "signatures where Id matches",
+                                        results
                                     );
+                                    if (results.rows[0] !== undefined) {
+                                        req.session.user.signature =
+                                            results.rows[0].signature;
 
-                                    console.log(
-                                        "req.session before redirecting to thanks",
-                                        req.session
-                                    );
-                                    res.redirect("/thanks");
-                                } else {
-                                    res.redirect("/petition");
+                                        console.log(
+                                            "results.rows[0].signature",
+                                            results.rows[0].signature
+                                        );
+
+                                        console.log(
+                                            "req.session before redirecting to thanks",
+                                            req.session
+                                        );
+                                        res.redirect("/thanks");
+                                    } else {
+                                        res.redirect("/petition");
+                                    }
                                 }
-                            });
+                            );
                         } else {
                             res.render("login", { somethingwrong: true });
                         }
@@ -276,9 +274,7 @@ app.post("/petition", (req, res) => {
 
 app.get("/profile/edit", (req, res) => {
     const { user } = req.session;
-    db.getData(
-        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-    )
+    db.getFromUsersAndProfiles(user.userId)
         .then((results) => {
             res.render("profile_edit", results.rows[0]);
         })
@@ -302,9 +298,7 @@ app.post("/profile/edit", (req, res) => {
         !req.body.url.startsWith("https://") &&
         req.body.url !== ""
     ) {
-        db.getData(
-            `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-        )
+        db.getFromUsersAndProfiles(user.userId)
             .then((results) => {
                 res.render("profile_edit", {
                     first: results.rows[0].first,
@@ -339,9 +333,7 @@ app.post("/profile/edit", (req, res) => {
                 ),
             ])
                 .then(() => {
-                    db.getData(
-                        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-                    )
+                    db.getFromUsersAndProfiles(user.userId)
                         .then((results) => {
                             user.firstName = req.body.first;
                             user.lastName = req.body.last;
@@ -389,9 +381,7 @@ app.post("/profile/edit", (req, res) => {
                         ),
                     ])
                         .then(() => {
-                            db.getData(
-                                `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-                            )
+                            db.getFromUsersAndProfiles(user.userId)
                                 .then((results) => {
                                     user.firstName = req.body.first;
                                     user.lastName = req.body.last;
@@ -458,9 +448,7 @@ app.get("/signers", (req, res) => {
     console.log("cookie in get signers ", req.session);
     const { user } = req.session;
     if (user.signature) {
-        db.getData(
-            `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id`
-        )
+        db.getSigners()
             .then((results) => {
                 console.log("signers GET signers: db relults", results.rows);
                 var rows = results.rows;
@@ -507,9 +495,7 @@ app.post("/signers", (req, res) => {
 app.get("/signers/:byCity", (req, res) => {
     const byCity = req.params.byCity;
     console.log("req.params", req.params);
-    db.getData(
-        `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id WHERE LOWER(city)=LOWER('${byCity}')`
-    ).then((results) => {
+    db.getSignersByCity(byCity).then((results) => {
         console.log("results in signers by city", results.rows[0]);
         var rows = results.rows;
         var signersInfo = [];

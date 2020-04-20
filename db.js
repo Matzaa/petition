@@ -36,13 +36,54 @@ module.exports.addUser = (first, last, email, password) => {
     );
 };
 
-//============== GET DATA ========================
+//========================= GET DATA =============================
 
 module.exports.getData = (dataQuery) => {
     return db.query(dataQuery);
 };
 
-//============ PROFILE EDIT QUERIES ==============
+//========== LOGIN ===========
+module.exports.getUsersByEmail = (email) => {
+    return db.query(
+        `
+    SELECT * FROM users WHERE users.email = $1;`,
+        [email]
+    );
+};
+
+module.exports.checkSig = (userId) => {
+    return db.query(
+        `
+    SELECT * FROM signatures WHERE user_id = $1;`,
+        [userId]
+    );
+};
+
+//========= PROFILE EDIT =======
+module.exports.getFromUsersAndProfiles = (userId) => {
+    return db.query(
+        `
+    SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = $1;
+    `,
+        [userId]
+    );
+};
+
+//========= SIGNERS ============
+module.exports.getSigners = () => {
+    return db.query(
+        `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id;`
+    );
+};
+
+module.exports.getSignersByCity = (city) => {
+    return db.query(
+        `SELECT first, last, url, city  FROM users INNER JOIN user_profiles ON users.id = user_profiles.user_id WHERE LOWER(city)=LOWER($1);`,
+        [city]
+    );
+};
+
+//================== PROFILE EDIT QUERIES =====================
 
 module.exports.updateUsersNoPw = (first, last, email, id) => {
     return db.query(
