@@ -11,7 +11,6 @@ module.exports.addSignature = (signature, user_id) => {
         `
     INSERT INTO signatures (signature, user_id)
     VALUES ($1, $2)
-    RETURNING ID;
     `,
         [signature, user_id]
     );
@@ -76,5 +75,5 @@ module.exports.upsertProfile = (age, city, url, user_id) => {
 
 //================= DELETE SIGNATURE ==========================
 module.exports.deleteSig = (user_id) => {
-    return db.query(`DELETE FROM  signatures WHERE user_id = $1;`, [user_id]);
+    return db.query(`DELETE FROM signatures WHERE user_id = $1;`, [user_id]);
 };

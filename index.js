@@ -5,6 +5,13 @@ const hb = require("express-handlebars");
 const cookieSession = require("cookie-session");
 const csurf = require("csurf");
 const { hash, compare } = require("./bc");
+// exports.app = app;
+// const {
+//     requireLoggedOutUser,
+//     requireNoSignature,
+//     requireSignature,
+// } = require("./middleware");
+// const profileRouter = require("./routes/profile");
 
 //-------------------templating engine--------------------
 app.engine("handlebars", hb());
@@ -34,11 +41,21 @@ app.use((req, res, next) => {
     next();
 });
 
+// app.use((req, res, next) => {
+//     console.log("Im running on every request");
+//     if (!req.session.user && req.url != "/register" && req.url != "/login") {
+//         res.redirect("/register");
+//     } else {
+//         next();
+//     }
+// });
+
 //--------------------routes-------------------------------
 app.get("/", (req, res) => {
     res.redirect("./register");
 });
 
+// require("./routes/auth");
 //=======================================================================================
 //==============================    register   ==========================================
 //=======================================================================================
@@ -52,6 +69,7 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+    console.log("cookie in post register", req.session);
     if (
         !req.body.first ||
         !req.body.last ||
@@ -102,8 +120,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-    let id;
-    console.log("req.body.password", req.body.password);
+    console.log("cookie in post login", req.session);
     if (!req.body.email || !req.body.password) {
         res.render("login", { somethingwrong: true });
         return;
@@ -178,6 +195,7 @@ app.get("/profile", (req, res) => {
 app.post("/profile", (req, res) => {
     const { user } = req.session;
     const url = req.body.url;
+    console.log("cookie in post profile", req.session);
     if (
         !url.startsWith("http://") &&
         !url.startsWith("https://") &&
@@ -215,12 +233,9 @@ app.post("/profile", (req, res) => {
 //=========================================================================================
 
 app.get("/petition", (req, res) => {
+    console.log("cookie in get petition", req.session);
     if (req.session.user) {
         const { user } = req.session;
-        // db.getData(`SELECT * FROM users WHERE id = ${user.userId}`)
-        //     .then((results) => {
-        //         let firstName = results.rows[0].first;
-        //         let lastName = results.rows[0].last;
         let firstName = user.firstName;
         let lastName = user.lastName;
         let signature = user.signature;
@@ -229,21 +244,18 @@ app.get("/petition", (req, res) => {
             lastName,
             signature,
         });
-        //     })
-        //     .catch((err) => {
-        //         console.log("err in petition render", err);
-        //     });
     } else {
         res.redirect("/register");
     }
 });
 
 app.post("/petition", (req, res) => {
+    console.log("cookie in post petition", req.session);
     if (req.body.signature == "") {
         res.render("./petition", { somethingwrong: true });
     } else {
         const { user } = req.session;
-        console.log("userId", user);
+        console.log("req.session.user", req.session.user);
         db.addSignature(req.body.signature, user.userId)
             .then(() => {
                 console.log("POST petition: signature added!");
@@ -276,6 +288,7 @@ app.get("/profile/edit", (req, res) => {
 });
 
 app.post("/profile/edit", (req, res) => {
+    console.log("cookie in post profile edit", req.session);
     const { user } = req.session;
     if (req.body.age == "") {
         req.body.age = null;
@@ -289,7 +302,23 @@ app.post("/profile/edit", (req, res) => {
         !req.body.url.startsWith("https://") &&
         req.body.url !== ""
     ) {
-        res.render("profile_edit", { somethingwrong: true });
+        db.getData(
+            `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
+        )
+            .then((results) => {
+                res.render("profile_edit", {
+                    first: results.rows[0].first,
+                    last: results.rows[0].last,
+                    email: results.rows[0].email,
+                    age: results.rows[0].age,
+                    city: results.rows[0].city,
+                    url: results.rows[0].url,
+                    somethingwrong: true,
+                });
+            })
+            .catch((err) => {
+                console.log("err in edit profile query results", err);
+            });
     } else {
         if (req.body.url == "") {
             req.body.url = null;
@@ -426,6 +455,7 @@ app.get("/thanks", (req, res) => {
 //=========================================================================================
 
 app.get("/signers", (req, res) => {
+    console.log("cookie in get signers ", req.session);
     const { user } = req.session;
     if (user.signature) {
         db.getData(
@@ -457,10 +487,12 @@ app.get("/signers", (req, res) => {
 });
 
 app.post("/signers", (req, res) => {
+    console.log("cookie in post signers ", req.session);
+
     const { user } = req.session;
     db.deleteSig(user.userId)
         .then(() => {
-            delete user.userId;
+            delete user.signature;
             res.redirect("/petition");
         })
         .catch((err) => {

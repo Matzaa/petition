@@ -14,9 +14,6 @@ We demand that if you haven't learned to play guitar 'til now, quarantine is not
     
     </p>
 {{/allSigners}}
-
-</div>
-
 <form method="POST" id="deleteSignature">
 {{#if somethingwrong}}
 <h3>Please complete all fields before submitting</h3>
@@ -28,6 +25,9 @@ We demand that if you haven't learned to play guitar 'til now, quarantine is not
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
     
 </form>
+
+</div>
+
 </div id='navbar'>
 {{>navbar}}
 </div>
