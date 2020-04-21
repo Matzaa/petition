@@ -1,18 +1,22 @@
 const { requireLoggedOutUser } = require("../middleware");
+const { app } = require("../index");
+const { hash, compare } = require("../bc");
+const db = require("../db");
 
 //=======================================================================================
 //==============================    register   ==========================================
 //=======================================================================================
-app.get("/register", (req, res) => {
+app.get("/register", requireLoggedOutUser, (req, res) => {
     console.log("req.session", req.session);
     if (req.session.user) {
-        res.redirect("/profile");
+        res.redirect("/profile/edit");
     } else {
         res.render("register");
     }
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", requireLoggedOutUser, (req, res) => {
+    console.log("cookie in post register", req.session);
     if (
         !req.body.first ||
         !req.body.last ||
@@ -58,20 +62,17 @@ app.post("/register", (req, res) => {
 //==================================    login    ===========================================
 //==========================================================================================
 
-app.get("/login", (req, res) => {
+app.get("/login", requireLoggedOutUser, (req, res) => {
     res.render("login");
 });
 
-app.post("/login", (req, res) => {
-    let id;
-    console.log("req.body.password", req.body.password);
+app.post("/login", requireLoggedOutUser, (req, res) => {
+    console.log("cookie in post login", req.session);
     if (!req.body.email || !req.body.password) {
         res.render("login", { somethingwrong: true });
         return;
     } else {
-        db.getData(
-            `SELECT * FROM users WHERE users.email = '${req.body.email}'`
-        )
+        db.getUsersByEmail(req.body.email)
             .then((results) => {
                 const hashedPw = results.rows[0].password;
                 compare(req.body.password, hashedPw)
@@ -89,31 +90,31 @@ app.post("/login", (req, res) => {
 
                                 req.session
                             );
-                            db.getData(
-                                `SELECT * FROM signatures WHERE user_id = '${req.session.user.userId}'`
-                            ).then((results) => {
-                                console.log(
-                                    "signatures where Id matches",
-                                    results
-                                );
-                                if (results.rows[0] !== undefined) {
-                                    req.session.user.signature =
-                                        results.rows[0].signature;
-
+                            db.checkSig(req.session.user.userId).then(
+                                (results) => {
                                     console.log(
-                                        "results.rows[0].signature",
-                                        results.rows[0].signature
+                                        "signatures where Id matches",
+                                        results
                                     );
+                                    if (results.rows[0] !== undefined) {
+                                        req.session.user.signature =
+                                            results.rows[0].signature;
 
-                                    console.log(
-                                        "req.session before redirecting to thanks",
-                                        req.session
-                                    );
-                                    res.redirect("/thanks");
-                                } else {
-                                    res.redirect("/petition");
+                                        console.log(
+                                            "results.rows[0].signature",
+                                            results.rows[0].signature
+                                        );
+
+                                        console.log(
+                                            "req.session before redirecting to thanks",
+                                            req.session
+                                        );
+                                        res.redirect("/thanks");
+                                    } else {
+                                        res.redirect("/petition");
+                                    }
                                 }
-                            });
+                            );
                         } else {
                             res.render("login", { somethingwrong: true });
                         }

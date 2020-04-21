@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 module.exports = router;
+const { hash } = require("../bc");
+const db = require("../db");
+
 //==========================================================================================
 //=================================     profile   ==========================================
 //==========================================================================================
@@ -12,6 +15,7 @@ router.get("/profile", (req, res) => {
 router.post("/profile", (req, res) => {
     const { user } = req.session;
     const url = req.body.url;
+    console.log("cookie in post profile", req.session);
     if (
         !url.startsWith("http://") &&
         !url.startsWith("https://") &&
@@ -50,9 +54,7 @@ router.post("/profile", (req, res) => {
 
 router.get("/profile/edit", (req, res) => {
     const { user } = req.session;
-    db.getData(
-        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-    )
+    db.getFromUsersAndProfiles(user.userId)
         .then((results) => {
             res.render("profile_edit", results.rows[0]);
         })
@@ -62,6 +64,7 @@ router.get("/profile/edit", (req, res) => {
 });
 
 router.post("/profile/edit", (req, res) => {
+    console.log("cookie in post profile edit", req.session);
     const { user } = req.session;
     if (req.body.age == "") {
         req.body.age = null;
@@ -75,7 +78,21 @@ router.post("/profile/edit", (req, res) => {
         !req.body.url.startsWith("https://") &&
         req.body.url !== ""
     ) {
-        res.render("profile_edit", { somethingwrong: true });
+        db.getFromUsersAndProfiles(user.userId)
+            .then((results) => {
+                res.render("profile_edit", {
+                    first: results.rows[0].first,
+                    last: results.rows[0].last,
+                    email: results.rows[0].email,
+                    age: results.rows[0].age,
+                    city: results.rows[0].city,
+                    url: results.rows[0].url,
+                    somethingwrong: true,
+                });
+            })
+            .catch((err) => {
+                console.log("err in edit profile query results", err);
+            });
     } else {
         if (req.body.url == "") {
             req.body.url = null;
@@ -96,9 +113,7 @@ router.post("/profile/edit", (req, res) => {
                 ),
             ])
                 .then(() => {
-                    db.getData(
-                        `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-                    )
+                    db.getFromUsersAndProfiles(user.userId)
                         .then((results) => {
                             user.firstName = req.body.first;
                             user.lastName = req.body.last;
@@ -146,9 +161,7 @@ router.post("/profile/edit", (req, res) => {
                         ),
                     ])
                         .then(() => {
-                            db.getData(
-                                `SELECT * FROM users LEFT JOIN user_profiles ON users.id = user_profiles.user_id WHERE users.id = '${user.userId}' `
-                            )
+                            db.getFromUsersAndProfiles(user.userId)
                                 .then((results) => {
                                     user.firstName = req.body.first;
                                     user.lastName = req.body.last;

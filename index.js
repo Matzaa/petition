@@ -41,14 +41,14 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.use((req, res, next) => {
-//     console.log("Im running on every request");
-//     if (!req.session.user && req.url != "/register" && req.url != "/login") {
-//         res.redirect("/register");
-//     } else {
-//         next();
-//     }
-// });
+app.use((req, res, next) => {
+    console.log("Im running on every request");
+    if (!req.session.user && req.url != "/register" && req.url != "/login") {
+        res.redirect("/register");
+    } else {
+        next();
+    }
+});
 
 //--------------------routes-------------------------------
 app.get("/", (req, res) => {
@@ -62,7 +62,7 @@ app.get("/", (req, res) => {
 app.get("/register", (req, res) => {
     console.log("req.session", req.session);
     if (req.session.user) {
-        res.redirect("/profile");
+        res.redirect("/profile/edit");
     } else {
         res.render("register");
     }
@@ -259,7 +259,7 @@ app.post("/petition", (req, res) => {
                 console.log("POST petition: signature added!");
                 req.session.user.signature = req.body.signature;
                 console.log("with req.session.signed", req.session);
-                res.redirect("./thanks"); //first finish addsignature then render thanks
+                res.redirect("./thanks");
             })
             .catch((err) => {
                 console.log("err in POST petition addSig", err);
