@@ -504,11 +504,13 @@ app.get("/signers/:byCity", (req, res) => {
                 first: rows[i].first,
                 last: rows[i].last,
                 url: rows[i].url,
+                city: rows[i].city,
             };
             signersInfo.push(fullInfo);
         }
         res.render("signers_byCity", {
             allSigners: signersInfo,
+            city: fullInfo.city,
         });
     });
 });
