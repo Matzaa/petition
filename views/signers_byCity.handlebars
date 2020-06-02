@@ -3,18 +3,20 @@ We demand that if you haven't learned to play guitar 'til now, quarantine is not
 </h1>
 
 <div id="signersNames">
-<h2>All of our supporters from {{city}} </h2>
-{{#allSigners}}
-    <p>
-    <a href="{{url}}">
-    {{first}}
-    </a> 
-    {{last}}
-    </p>
-{{/allSigners}}
-</div>
-</div id='navbar'>
-{{>navbar}}
+    <div class="box">
+        <h2>All of our supporters from {{city}} </h2>
+        {{#allSigners}}
+            <p>
+            <a href="{{url}}">
+            {{first}}
+            </a> 
+            {{last}}
+            </p>
+        {{/allSigners}}
+        </div>
+        </div id='navbar'>
+        {{>navbar}}
+    </div>
 </div>
 
 

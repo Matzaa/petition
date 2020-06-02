@@ -3,29 +3,32 @@ We demand that if you haven't learned to play guitar 'til now, quarantine is not
 </h1>
 
 <div id="signersNames">
+    <div class="box">
+        {{#allSigners}}
+            <p>
+            <a href="{{url}}">
+            {{first}}
+            </a> 
+            {{last}}
+            <a href="/signers/{{city}}">{{city}}</a>
+            
+            </p>
+        {{/allSigners}}
+    </div>
+    <div class="box">
+        <form method="POST" id="deleteSignature">
+        {{#if somethingwrong}}
+        <h3>Please complete all fields before submitting</h3>
+        {{/if}}
+        <h2>If you've changed your mind and want
+        to delete your signature click
+            <button type='submit'>here</button>
+        </h2>
 
-{{#allSigners}}
-    <p>
-    <a href="{{url}}">
-    {{first}}
-    </a> 
-    {{last}}
-    <a href="/signers/{{city}}">{{city}}</a>
-    
-    </p>
-{{/allSigners}}
-<form method="POST" id="deleteSignature">
-{{#if somethingwrong}}
-<h3>Please complete all fields before submitting</h3>
-{{/if}}
-<h2>If you've changed your mind and want to delete your signature click
-    <button type='submit'>here</button>
-</h2>
-
-    <input type="hidden" name="_csrf" value="{{csrfToken}}">
-    
-</form>
-
+            <input type="hidden" name="_csrf" value="{{csrfToken}}">
+            
+        </form>
+    </div>
 </div>
 
 </div id='navbar'>

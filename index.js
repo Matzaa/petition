@@ -127,6 +127,7 @@ app.post("/login", (req, res) => {
     } else {
         db.getUsersByEmail(req.body.email)
             .then((results) => {
+                console.log("req.body.password in login", results);
                 const hashedPw = results.rows[0].password;
                 compare(req.body.password, hashedPw)
                     .then((matchValue) => {
