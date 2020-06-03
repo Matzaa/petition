@@ -1,11 +1,11 @@
-<form method="POST" class="mostForms">
-<h1>Login</h1>
+<form method="POST" class="mostForms" >
+<h1 id="login-1">Login</h1>
 {{#if somethingwrong}}
 <h3>Please provide a valid e-mail and password</h3>
 {{/if}}
     <input type="text" name="email" placeholder="e-mail address" autocomplete="off">
     <input type="password" name="password" placeholder="password" autocomplete="off">
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    <h4 id="login-4">Haven't registered yet? Go <a href="/register">here</a> !</h4>
     <button type='submit'>Login</button>
-    <h4 >Haven't registered yet? Go <a href="/register" style="color:tomato;">here</a> !</h4>
 </form>
